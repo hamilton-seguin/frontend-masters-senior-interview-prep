@@ -12,9 +12,9 @@
 import type { Equal, Expect } from '@course/types'
 
 /* _____________ Your Code Here _____________ */
-
-type TupleToUnion = {}
-
+type AnyArr = ['1', 2, null]
+type TupleToUnion<T extends readonly any[]> = T[number]
+let test: TupleToUnion<AnyArr> // '1' | 2 | null
 /* _____________ Test Cases _____________ */
 
 type cases = [
