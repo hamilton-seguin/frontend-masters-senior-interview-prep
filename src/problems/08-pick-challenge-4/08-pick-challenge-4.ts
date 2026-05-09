@@ -19,7 +19,7 @@ import type { Equal, Expect } from '@course/types'
 
 /* _____________ Your Code Here _____________ */
 
-type MyPick = {}
+type MyPick<T extends {}, K extends keyof T> = { [P in K]: T[P] }
 
 /* _____________ Test Cases _____________ */
 
@@ -37,6 +37,8 @@ interface Expected2 {
   title: string
   completed: boolean
 }
+
+let test: MyPick<Todo, 'title' | 'completed'>
 
 type cases = [
   Expect<Equal<MyPick<Todo, 'title'>, Expected1>>,
