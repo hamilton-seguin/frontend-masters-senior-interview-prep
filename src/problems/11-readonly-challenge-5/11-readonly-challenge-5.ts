@@ -17,8 +17,7 @@ import type { Equal, Expect } from '@course/types'
 
 /* _____________ Your Code Here _____________ */
 
-// Your implementation here
-
+type MyReadonly<T extends {}> = { readonly [P in keyof T]: T[P]; } // [K in keyof T] remaps the properties of the object to the same object
 /* _____________ Test Cases _____________ */
 
 interface Todo {
