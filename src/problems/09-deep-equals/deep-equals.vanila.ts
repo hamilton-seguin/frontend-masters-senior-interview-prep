@@ -1,50 +1,33 @@
 // bun test src/problems/09-deep-equals/test/deep-equals.test.ts
+
 import { detectType } from '@course/utils'
 
-type SeenPairs = Map<object, WeakSet<object>>
-
-function hasSeenPair(a: object, b: object, seen: SeenPairs) {
-  return seen.get(a)?.has(b) ?? false
-}
-
-function addSeenPair(a: object, b: object, seen: SeenPairs) {
-  let matches = seen.get(a)
-  if (!matches) {
-    matches = new WeakSet<object>()
-
-    seen.set(a, matches)
+export function deepEquals(a: any, b: any, cache = new Map()): boolean {
+  if (a === b) {
+    return true
   }
-  matches.add(b)
-}
-
-export function deepEquals(a: any, b: any, seen: SeenPairs = new Map()): boolean {
-  if (a === b) return true
-
-  const typeA = detectType(a)
-  const typeB = detectType(b)
+  if (cache.has(a) && cache.get(a)!.has(b)) {
+    return true
+  }
+  const [typeA, typeB] = [detectType(a), detectType(b)]
   if (typeA !== typeB) return false
 
-  if (a === null || b === null || typeof a !== 'object' || typeof b !== 'object') {
-    return a === b
+  if (typeA === 'object' || typeA === 'array') {
+    const [keysA, keysB] = [Object.keys(a), Object.keys(b)]
+    if (keysA.length !== keysB.length) return false
+
+    if (!cache.has(a)) cache.set(a, new Set())
+    cache.get(a)!.add(b)
+  
+    for (const key of keysA) {
+      if (!Object.prototype.hasOwnProperty.call(b, key) || !deepEquals(a[key], b[key], cache)) {
+        return false
+      }
+    }
+    return true
   }
 
-  if (hasSeenPair(a, b, seen)) return true
-  addSeenPair(a, b, seen)
-
-  const keysA = Object.keys(a)
-  const keysB = Object.keys(b)
-  if (keysA.length !== keysB.length) return false
-
-  const keysBSet = new Set(keysB)
-  for (const key of keysA) {
-    if (!keysBSet.has(key)) return false
-  }
-
-  for (const key of keysA) {
-    if (!deepEquals(a[key], b[key], seen)) return false
-  }
-
-  return true
+  return a === b
 }
 
 // --- Examples ---
