@@ -41,7 +41,9 @@ export abstract class AbstractComponent<T extends object> {
    * - Initializes events as an empty array
    */
   constructor(config: TComponentConfig<T>) {
-    // TODO: implement
+    this.config = { ...DEFAULT_CONFIG, ...config }
+    this.container = null
+    this.events = []
   }
 
   /**
@@ -56,7 +58,21 @@ export abstract class AbstractComponent<T extends object> {
    *   - Store { type, callback } in this.events array
    */
   init() {
-    // TODO: implement
+    this.container = document.createElement(this.config.tag as keyof HTMLElementTagNameMap)
+    for (const className of this.config.className ?? []) {
+      this.container.classList.add(className)
+    }
+    for (const type of this.config.listeners ?? []) {
+      const eventName = toEventName(type)
+      const handler = (this as unknown as Record<string, EventListener>)[eventName]
+
+      if (!handler) {
+        throw new Error(`handler ${eventName} for ${type} not implemented`)
+      }
+      const callback = handler.bind(this)
+      this.events.push({ type, callback })
+      this.container!.addEventListener(type, callback)
+    }
   }
 
   afterRender() {}
@@ -70,7 +86,11 @@ export abstract class AbstractComponent<T extends object> {
    * - Call afterRender() hook
    */
   render() {
-    // TODO: implement
+    if (this.container) this.destroy()
+    this.init()
+    this.container!.innerHTML = this.toHTML()
+    this.config.root.appendChild(this.container!)
+    this.afterRender()
   }
 
   toHTML(): string {
@@ -84,6 +104,10 @@ export abstract class AbstractComponent<T extends object> {
    * - Remove the container from the DOM
    */
   destroy() {
-    // TODO: implement
+    for (const { type, callback } of this.events) {
+      this.container!.removeEventListener(type, callback)
+    }
+    this.events = []
+    this.container!.remove()
   }
 }
