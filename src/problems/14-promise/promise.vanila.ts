@@ -8,9 +8,24 @@ const REJECTED: PromiseStatus = 'rejected'
 
 // Step 1: Define types and constants
 //  - Executor
+type TExecutor<T> = (
+  resolve: (value: T | PromiseLike<T>) => void,
+  reject: (reason: any) => any,
+) => void
+
 //  - OnFulfilled<T,R>
 //  - OnRejected<R>
+type OnFulfilled<T, R> = null | undefined | ((value: T | PromiseLike<T>) => R)
+type OnRejected<R> = null | undefined | ((reason: any) => R)
+
 //  - Handler
+type THandler<T> = {
+  onFulfilled: (value: T) => void
+  onRejected: (reason: any) => void
+  resolve: (value: any) => void
+  reject: (reason: any) => void
+}
+
 //  - Update MyPromise<T> with types above
 // Step 2: Define class fields
 //  - handlers, status, value, isResolved
@@ -22,20 +37,95 @@ const REJECTED: PromiseStatus = 'rejected'
 // - Run tests for then / catch and chaining
 // Step 7: static resolve, static reject
 // - Run tests for statics
-export class MyPromise {
-  constructor(executor: any) {}
 
-  then() {
-    throw new Error('Not implemented')
+export class MyPromise<T> {
+  value: T | any
+  status: PromiseStatus = PENDING
+  handlers: THandler<T>[] = []
+  isResolved: boolean = false
+
+  constructor(executor: TExecutor<T>) {
+    try {
+      executor(this.resolve, this.reject)
+    } catch (e) {
+      this.reject(e)
+    }
   }
-  catch() {
-    throw new Error('Not implemented')
+
+  then<R = T>(OnFulfilled: OnFulfilled<T, R>, onRejected?: OnRejected<R>): MyPromise<R> {
+    const handler: THandler<T> = {
+      onFulfilled: typeof OnFulfilled === 'function' ? OnFulfilled : (v) => v,
+      onRejected:
+        typeof onRejected === 'function'
+          ? onRejected
+          : (v) => {
+              throw v
+            },
+      resolve: () => {},
+      reject: () => {},
+    }
+    const promise = new MyPromise<R>((resolve, reject) => {
+      handler.resolve = resolve
+      handler.reject = reject
+    })
+
+    this.handlers.push(handler)
+
+    if (this.status !== PENDING) {
+      this.execute()
+    }
+    return promise
   }
-  static resolve() {
-    throw new Error('Not implemented')
+
+  #settle = (value: T | PromiseLike<T>, status: PromiseStatus = FULFILLED) => {
+    if (this.isResolved) return
+    this.isResolved = true
+    const updatePromise = (value: T) => {
+      this.value = value
+      this.status = status
+      this.execute()
+    }
+    if (value instanceof MyPromise && status === FULFILLED) {
+      value.then(updatePromise)
+    } else {
+      updatePromise(value as T)
+    }
   }
-  static reject() {
-    throw new Error('Not implemented')
+  
+    resolve = (value: T | PromiseLike<T>) => {
+      this.#settle(value)
+    }
+    reject = (reason: any) => {
+      void this.#settle(reason, REJECTED)
+    }
+
+  execute = () => {
+    for (const { onFulfilled, onRejected, resolve, reject } of this.handlers) {
+      const handler = this.status === FULFILLED ? onFulfilled : onRejected
+      queueMicrotask(() => {
+        try {
+          const value: any = handler(this.value)
+          if (value instanceof MyPromise) {
+            value.then(resolve, reject)
+          } else {
+            resolve(value)
+          }
+        } catch (e) {
+          reject(e)
+        }
+      })
+    }
+    this.handlers = []
+  }
+
+  catch<R>(onRejected: OnRejected<R>) {
+    return this.then(null, onRejected)
+  }
+  static resolve<T>(value: T) {
+    return new MyPromise<T>((resolve) => resolve(value))
+  }
+  static reject<R>(reason: R) {
+    return new MyPromise<R>((_, reject) => reject(reason))
   }
 }
 
@@ -45,7 +135,7 @@ export class MyPromise {
 // --- Step 4: constructor + Executor ---
 // const p1 = new MyPromise((resolve: any) => resolve(42))
 // console.log(p1) // Expected: MyPromise { status: 'fulfilled', value: 42 }
-//
+
 // const p2 = new MyPromise((_: any, reject: any) => reject('error'))
 // console.log(p2) // Expected: MyPromise { status: 'rejected', value: 'error' }
 //
@@ -58,7 +148,7 @@ export class MyPromise {
 // --- Step 6: then / catch and chaining ---
 // const p5 = new MyPromise((resolve: any) => resolve(42))
 // p5.then((v: any) => console.log(v))  // Expected: 42
-//
+
 // const p6 = new MyPromise((resolve: any) => resolve(1))
 //   .then((v: any) => v + 1)
 //   .then((v: any) => console.log(v))   // Expected: 2
@@ -75,5 +165,5 @@ export class MyPromise {
 //   .catch((e: any) => console.log(e.message))  // Expected: "handler error"
 
 // --- Step 7: static resolve, static reject ---
-// MyPromise.resolve(99).then((v: any) => console.log(v))   // Expected: 99
-// MyPromise.reject('no').catch((e: any) => console.log(e))  // Expected: "no"
+MyPromise.resolve(99).then((v: any) => console.log(v)) // Expected: 99
+MyPromise.reject('no').catch((e: any) => console.log(e)) // Expected: "no"
