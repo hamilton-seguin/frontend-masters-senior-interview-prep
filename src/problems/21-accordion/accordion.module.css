@@ -1,33 +1,58 @@
-/* Student solution styles */
-
-/* style the clickable header
-- hide default marker with list-style: none */
-.summary {
+.container {
+  margin: 0 auto;
 }
 
-/* Hide the default disclosure triangle in WebKit browsers */
-.summary::-webkit-details-marker {
-}
-
-/* Details: style the accordion item wrapper */
+/* Individual accordion item wrapper */
 .details {
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  overflow: hidden;
 }
 
-/* Animate content expansion using ::details-content pseudo-element
-   - transition max-height (0.3s ease) and content-visibility (0.3s allow-discrete)
-   - set max-height to 0
-   - hide overflow */
+/* 
+  Animation logic for the content expansion.
+  ::details-content is a pseudo-element that represents the content part of the details element.
+  We animate height and content-visibility to create a smooth open/close effect.
+*/
 .details::details-content {
+  transition:
+    max-height 0.3s ease,
+    content-visibility 0.3s allow-discrete;
+  max-height: 0;
+  overflow: hidden;
 }
 
-/* When open, expand content */
+/* When open, set height to auto to show content */
 .details[open]::details-content {
+  max-height: 500px;
+  /* Closer to actual content height to minimize delay */
+}
 
-/* Optional - style marker */
+.summary {
+  background-color: #f9f9f9;
+  cursor: pointer;
+  font-weight: 500;
+  list-style: none;
+}
+
+/* Hide default triangle in WebKit browsers */
+.summary::-webkit-details-marker {
+  display: none;
+}
+
 /* Custom indicator (plus sign) */
 .summary::after {
+  content: '+';
+  transition: transform 0.2s;
 }
 
 /* Rotate the indicator when the item is open */
 .details[open] .summary::after {
+  transform: rotate(45deg);
+}
+
+/* The content area inside the accordion item */
+.content {
+  background-color: #fff;
+  border-top: 1px solid #eee;
 }

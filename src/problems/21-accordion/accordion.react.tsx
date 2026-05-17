@@ -17,9 +17,28 @@ import cx from '@course/cx'
  * 3. Provide toHTML template — map over items, render <details>/<summary>/<p> for each
  * 4. Add CSS — use styles and cx() for className composition
  */
+type TProps = { items: TItems[] }
+type TItems = { id: string; title: string; content: string }
 
-type TProps = {}
-
-export const Accordion = (props: TProps) => {
-  return <div>{/* TODO: implement */}</div>
+export const Accordion = ({ items }: TProps) => {
+  return (
+    <div className={cx(css.container, flex.maxW600px, flex.flexColumnGap12, flex.w100)}>
+      {items.map((item) => (
+        <details key={item.id} className={cx(css.details)}>
+          <summary
+            className={cx(
+              css.summary,
+              flex.flexRowBetween,
+              flex.paddingHor16,
+              flex.paddingVer12,
+              flex.fontXL,
+            )}
+          >
+            {item.title}
+          </summary>
+          <p className={cx(css.content, flex.paddingVer16, flex.paddingHor16)}>{item.content}</p>
+        </details>
+      ))}
+    </div>
+  )
 }
