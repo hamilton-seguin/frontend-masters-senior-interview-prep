@@ -39,7 +39,16 @@ export class Dialog extends AbstractComponent<TDialogProps> {
    */
   toHTML(): string {
     // TODO: implement
-    return ''
+    return `
+    <dialog class="${css.container}">
+      <section>${this.config.content}</section>
+      <div>
+        <button data-action="confirm">Confirm</button>
+        <button data-action="cancel">Cancel</button>
+      </div>
+    </dialog>
+
+    `
   }
 
   /**
@@ -47,7 +56,7 @@ export class Dialog extends AbstractComponent<TDialogProps> {
    * - Query the <dialog> element from this.container and store in #dialogElement
    */
   afterRender(): void {
-    // TODO: implement
+    this.#dialogElement = this.container!.querySelector('dialog')
   }
 
   /**
@@ -65,8 +74,16 @@ export class Dialog extends AbstractComponent<TDialogProps> {
    * - If "confirm": call onConfirm() and close()
    * - If "cancel": call onCancel() and close()
    */
-  onClick(event: MouseEvent): void {
-    // TODO: implement
+  onClick({target}: MouseEvent): void {
+    if(target instanceof HTMLElement && target.dataset.action){
+      const action = target.dataset.action
+      if (action === 'confirm'){
+        this.config.onConfirm()
+      } else {
+        this.config.onCancel()
+      }
+      this.close()
+    }
   }
 
   /**
@@ -75,10 +92,10 @@ export class Dialog extends AbstractComponent<TDialogProps> {
    * - close(): call #dialogElement.close()
    */
   open(): void {
-    // TODO: implement
+    this.#dialogElement?.showModal()
   }
 
   close(): void {
-    // TODO: implement
+    this.#dialogElement?.close()
   }
 }
