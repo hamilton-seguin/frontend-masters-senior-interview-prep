@@ -1,27 +1,43 @@
 /* Container: relative positioning, inline-block */
 .container {
   position: relative;
+  display: inline-block;
 }
 
 /* Tooltip: absolute positioned, styled box with opacity transition */
 .tooltip {
+  padding: 0.5rem;
   position: absolute;
-  width: 100px;
-  max-width: 100px;
-  min-height: 100px;
-  background: yellow;
-  display: none;
-  cursor: pointer;
+  border: 1px solid #dfdfdf;
+  background-color: #faf6c3;
+  opacity: 0;
+  transition: opacity 0.3s ease-in-out;
+  white-space: nowrap;
+}
+
+.top,
+.bottom,
+.left,
+.right {
+  opacity: 1;
 }
 
 .top {
+  top: 0;
+  transform: translateY(-100%);
 }
 
 .bottom {
+  bottom: 0;
+  transform: translateY(100%);
 }
 
 .left {
+  left: 0;
+  transform: translateX(-100%);
 }
 
 .right {
+  left: 100%;
+  transform: translateX(0);
 }

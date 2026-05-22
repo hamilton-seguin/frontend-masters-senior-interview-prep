@@ -1,4 +1,4 @@
-import React, { useEffect } from 'react'
+import React, { useState, useEffect, useId, useRef } from 'react'
 import css from './tooltip.module.css'
 import cx from '@course/cx'
 
@@ -29,8 +29,23 @@ const getAutoPosition = (
   triggerRect: DOMRect,
   boundaryRect: { left: number; top: number; right: number; bottom: number },
 ): 'top' | 'bottom' | 'left' | 'right' => {
-  // TODO: implement
-  return 'top'
+  const { width: tw, height: th } = tooltipRect
+  const { left: trL, top: trT, width: trW, height: trH, right: trR, bottom: trB } = triggerRect
+
+  const fits = (x: number, y: number) =>
+    x >= boundaryRect.left &&
+    y >= boundaryRect.top &&
+    Math.ceil(x + tw) <= boundaryRect.right &&
+    Math.ceil(y + th) <= boundaryRect.bottom
+
+  const candidates: TCandidate[] = [
+    { position: 'top', x: trL, y: trT - th },
+    { position: 'right', x: trR, y: trT },
+    { position: 'bottom', x: trL, y: trB },
+    { position: 'left', x: trL - tw, y: trT },
+  ]
+
+  return candidates.find(({ x, y }) => fits(x, y))?.position ?? 'top'
 }
 
 /**
@@ -56,6 +71,64 @@ const getAutoPosition = (
  *   - Use aria-describedby on container pointing to tooltip id when visible
  */
 export function Tooltip({ children, content, position = 'top', boundary }: TooltipProps) {
-  // TODO: implement
-  return <div>TODO: Implement</div>
+  const [isVisible, setIsVisible] = useState(false)
+  const [tooltipPosition, setTooltipPosition] = useState<'top' | 'bottom' | 'left' | 'right'>(
+    position === 'auto' ? 'top' : position,
+  )
+
+  const tooltipRef = useRef<HTMLDivElement>(null)
+  const containerRef = useRef<HTMLDivElement>(null)
+
+  useEffect(() => {
+    if (isVisible && position === 'auto' && tooltipRef.current && containerRef.current) {
+      const tooltipRect = tooltipRef.current.getBoundingClientRect()
+      const triggerRect = containerRef.current.getBoundingClientRect()
+
+      const boundaryElement = boundary instanceof HTMLElement ? boundary : boundary?.current
+      const boundaryRect = boundaryElement
+        ? boundaryElement.getBoundingClientRect()
+        : { left: 0, top: 0, right: window.innerWidth, bottom: window.innerHeight }
+
+      const newPosition = getAutoPosition(tooltipRect, triggerRect, boundaryRect)
+
+      if (newPosition !== tooltipPosition) {
+        setTooltipPosition(newPosition)
+      }
+    }
+  }, [isVisible, position, tooltipPosition, boundary])
+
+  const id = useId()
+  const show = () => setIsVisible(true)
+  const hide = () => {
+    setIsVisible(false)
+    if (position === 'auto') setTooltipPosition('top')
+  }
+  const handleEsc = (e: React.KeyboardEvent) => {
+    if (e.key === 'Escape') hide()
+  }
+
+  return (
+    <div
+      ref={containerRef}
+      className={cx(css.container)}
+      onFocus={show}
+      onBlur={hide}
+      onMouseEnter={show}
+      onMouseLeave={hide}
+      onKeyDown={handleEsc}
+      aria-describedby={isVisible ? id : undefined}
+    >
+      {children}
+      {isVisible && (
+        <div
+          ref={tooltipRef}
+          role="tooltip"
+          id={id}
+          className={cx(css.tooltip, positions[tooltipPosition])}
+        >
+          {content}
+        </div>
+      )}
+    </div>
+  )
 }

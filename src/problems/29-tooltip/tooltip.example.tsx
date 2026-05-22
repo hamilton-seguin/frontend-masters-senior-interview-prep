@@ -107,7 +107,7 @@ export function TooltipVanillaExample() {
     ) => {
       const btn = document.createElement('button')
       btn.textContent = btnText
-      const tooltip = new VanillaTooltip({ root, children: btn, content: text, position, boundary })
+      const tooltip = new VanillaTooltipStudent({ root, children: btn, content: text, position, boundary })
       tooltip.render()
       return tooltip
     }
@@ -206,7 +206,6 @@ export function TooltipStudentExample() {
         <div style={{ position: 'absolute', top: 0, left: '50%', transform: 'translateX(-50%)' }}>
           <TooltipStudent
             position="auto"
-            boundary={autoBoundaryRef}
             content="No room above → goes bottom"
           >
             <button>Top Edge</button>
@@ -217,7 +216,6 @@ export function TooltipStudentExample() {
         >
           <TooltipStudent
             position="auto"
-            boundary={autoBoundaryRef}
             content="No room below → goes top"
           >
             <button>Bottom Edge</button>
@@ -226,7 +224,6 @@ export function TooltipStudentExample() {
         <div style={{ position: 'absolute', left: 0, top: '50%', transform: 'translateY(-50%)' }}>
           <TooltipStudent
             position="auto"
-            boundary={autoBoundaryRef}
             content="No room left → goes top or right"
           >
             <button>Left Edge</button>
@@ -235,7 +232,6 @@ export function TooltipStudentExample() {
         <div style={{ position: 'absolute', right: 0, top: '50%', transform: 'translateY(-50%)' }}>
           <TooltipStudent
             position="auto"
-            boundary={autoBoundaryRef}
             content="No room right → goes top or left"
           >
             <button>Right Edge</button>
@@ -251,7 +247,6 @@ export function TooltipStudentExample() {
         >
           <TooltipStudent
             position="auto"
-            boundary={autoBoundaryRef}
             content="Room everywhere → defaults to top"
           >
             <button>Center</button>
